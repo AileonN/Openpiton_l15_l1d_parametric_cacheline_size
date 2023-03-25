@@ -46,7 +46,7 @@ module noc2decoder(
     input wire clk,
     input wire rst_n,
 
-    input wire [511:0] noc2_data,
+    input wire [64*`NOC2_MAX_FLIT_NUMBER-1:0] noc2_data,
     input wire noc2_data_val,
     input wire l15_noc2decoder_ack,
     input wire l15_noc2decoder_header_ack,
@@ -66,10 +66,7 @@ module noc2decoder(
     output reg noc2decoder_l15_f4b,
     output reg [`MSG_TYPE_WIDTH-1:0] noc2decoder_l15_reqtype,
     output reg [`L15_MESI_STATE_WIDTH-1:0] noc2decoder_l15_ack_state,
-    output reg [63:0] noc2decoder_l15_data_0,
-    output reg [63:0] noc2decoder_l15_data_1,
-    output reg [63:0] noc2decoder_l15_data_2,
-    output reg [63:0] noc2decoder_l15_data_3,
+    output reg [(64*`NOC2_MAX_DATA_FLIT_NUMBER)-1:0] noc2decoder_l15_data,
     output reg [39:0] noc2decoder_l15_address,
     output reg [3:0] noc2decoder_l15_fwd_subcacheline_vector,
     output reg [`L15_CSM_NUM_TICKETS_LOG2-1:0] noc2decoder_l15_csm_mshrid,
@@ -89,6 +86,7 @@ end
 
 reg [`MSG_MSHRID_WIDTH-1:0] noc2_mshrid;
 reg [`MSG_LENGTH_WIDTH-1:0] msg_len;
+integer next_noc2_data_packet;
 always @ *
 begin
     noc2_data_ack = l15_noc2decoder_ack;
@@ -116,14 +114,20 @@ begin
     // non-cacheable requests.
     // cacheable ifill      -- 32B / 4 flits 
     // non-cacheable ifill  -- 4B / 1 flit
-    // cacheable load data ack      -- 16B / 2 flit
+    // cacheable load data ack      -- 64B / 8 flit
     // non-cacheable load data ack  -- 1-16B / 1-2 flit  sparc may send 16BNC-load
     // interrupt            -- 1 flit 
-    noc2decoder_l15_data_0 = noc2_data[2*64 - 1 -: 64];
-    noc2decoder_l15_data_1 = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] : noc2_data[3*64 - 1 -: 64];
-    noc2decoder_l15_data_2 = (msg_len <= `MSG_LENGTH_WIDTH'd2) ? noc2_data[2*64 - 1 -: 64] : noc2_data[4*64 - 1 -: 64];
-    noc2decoder_l15_data_3 = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] :
+    noc2decoder_l15_data[`L15_UNPARAM_63_0] = noc2_data[2*64 - 1 -: 64];
+    noc2decoder_l15_data[`L15_UNPARAM_127_64] = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] : noc2_data[3*64 - 1 -: 64];
+    noc2decoder_l15_data[`L15_UNPARAM_191_128] = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] : 
+                                    (msg_len == `MSG_LENGTH_WIDTH'd2) ? noc2_data[2*64 - 1 -: 64] : noc2_data[4*64 - 1 -: 64];
+    noc2decoder_l15_data[`L15_UNPARAM_255_192] = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] :
                                     (msg_len == `MSG_LENGTH_WIDTH'd2) ? noc2_data[3*64 - 1 -: 64] : noc2_data[5*64 - 1 -: 64];
+    for (next_noc2_data_packet=4;next_noc2_data_packet<`NOC2_MAX_DATA_FLIT_NUMBER;next_noc2_data_packet=next_noc2_data_packet+1) begin
+        noc2decoder_l15_data[(next_noc2_data_packet+1)*64 - 1 -: 64] = (msg_len == `MSG_LENGTH_WIDTH'd1) ? noc2_data[2*64 - 1 -: 64] :
+                                                                        ((msg_len == `MSG_LENGTH_WIDTH'd2) ? (((next_noc2_data_packet & 1'h1) == 0) ? noc2_data[2*64 - 1 -: 64]  : noc2_data[3*64 - 1 -: 64])
+                                                                        : noc2_data[(next_noc2_data_packet+2)*64 - 1 -: 64]);
+    end
 
     noc2decoder_l15_src_homeid = 0;
     noc2decoder_l15_src_homeid[`PACKET_HOME_ID_Y_MASK] = noc2_data[`MSG_SRC_Y];

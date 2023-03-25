@@ -84,8 +84,20 @@ CONFIG_L2_SIZE = int(os.environ.get('CONFIG_L2_SIZE', '65536'))
 CONFIG_L2_ASSOCIATIVITY = int(os.environ.get('CONFIG_L2_ASSOCIATIVITY', '4'))
 # CONFIG_L2_ASSOCIATIVITY = 8
 # constants, not configurable
-L15_LINE_SIZE = 16
+L1I_LINE_SIZE = 32
+L1D_LINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZE', '64'))
+L15_LINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZE', '64'))
 L2_LINE_SIZE = 64
+
+#Packets of 64b/8B
+NOC_BYTES_WIDTH = 8
+NOC_BITS_WIDTH = NOC_BYTES_WIDTH * 8
+L1_MAX_DATA_PACKETS = 4
+L1I_MAX_DATA_PACKETS = 4
+L1D_MAX_DATA_PACKETS = L1D_LINE_SIZE/NOC_BYTES_WIDTH
+L15_MAX_DATA_PACKETS = L15_LINE_SIZE/NOC_BYTES_WIDTH
+if L1D_LINE_SIZE > L1I_LINE_SIZE:
+  L1_MAX_DATA_PACKETS = L1D_LINE_SIZE/NOC_BYTES_WIDTH
 
 #########################################################
 # BRAM configurations
@@ -104,13 +116,15 @@ bram_l15_depth = bram_l15_entries / CONFIG_L15_ASSOCIATIVITY
 bram_l2_entries = CONFIG_L2_SIZE / L2_LINE_SIZE
 bram_l2_depth = bram_l2_entries / CONFIG_L2_ASSOCIATIVITY
 
+l15_array_per_cacheline = L15_LINE_SIZE / 16
+
 # # TODO: change magic numbers to defines/parameters
 BRAM_CONFIG["fp_regfile"] = BramCfg(128, 78)
 BRAM_CONFIG["l1d_data"]   = BramCfg(128, 576)
 BRAM_CONFIG["l1i_data"]   = BramCfg(256, 272)
 BRAM_CONFIG["l1d_tag"]    = BramCfg(128, 132)
 BRAM_CONFIG["l1i_tag"]    = BramCfg(128, 132)
-BRAM_CONFIG["l15_data"]   = BramCfg(bram_l15_entries, 128)
+BRAM_CONFIG["l15_data"]   = BramCfg(bram_l15_entries * l15_array_per_cacheline, 128)
 BRAM_CONFIG["l15_tag"]    = BramCfg(bram_l15_depth, 132)
 BRAM_CONFIG["l15_hmt"]    = BramCfg(bram_l15_entries, 32)
 BRAM_CONFIG["l2_data"]    = BramCfg(bram_l2_entries*4, 144) # *4 because entries are 16B instead of 64B

@@ -64,11 +64,9 @@ module rf_l15_wmt(
    );
 
 <%
-   linesize = 16
+   linesize = L1D_LINE_SIZE
    numset = int(int(CONFIG_L1D_SIZE)/int(CONFIG_L1D_ASSOCIATIVITY)/linesize)
    numway=int(CONFIG_L1D_ASSOCIATIVITY)
-   # numset=128
-   # numway=4
 %>
 // reg [`L15_WMT_MASK] data_out_f;
 

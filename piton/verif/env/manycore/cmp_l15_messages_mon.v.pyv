@@ -479,10 +479,14 @@ begin
         $display("   mshrid %d, l2miss %d, f4b %d, ackstate %d, address 0x%x",
                     `L15_PIPE0.noc2decoder_l15_mshrid, `L15_PIPE0.noc2decoder_l15_l2miss, `L15_PIPE0.noc2decoder_l15_f4b,
                     `L15_PIPE0.noc2decoder_l15_ack_state, `L15_PIPE0.noc2decoder_l15_address);
-        $display("   Data1: 0x%x", `L15_PIPE0.noc2decoder_l15_data_0);
-        $display("   Data2: 0x%x", `L15_PIPE0.noc2decoder_l15_data_1);
-        $display("   Data3: 0x%x", `L15_PIPE0.noc2decoder_l15_data_2);
-        $display("   Data4: 0x%x", `L15_PIPE0.noc2decoder_l15_data_3);
+        $display("   Data1: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_63_0]);
+        $display("   Data2: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_127_64]);
+        $display("   Data3: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_191_128]);
+        $display("   Data4: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_255_192]);
+        $display("   Data5: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_319_256]);
+        $display("   Data6: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_383_320]);
+        $display("   Data7: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_447_384]);
+        $display("   Data8: 0x%x", `L15_PIPE0.noc2decoder_l15_data[`L15_UNPARAM_511_448]);
     end
 
     if (`L15_PIPE0.l15_cpxencoder_val && !`L15_PIPE0.stall_s3)
@@ -532,10 +536,14 @@ begin
                     `L15_PIPE0.l15_cpxencoder_inval_dcache_all_way, `L15_PIPE0.l15_cpxencoder_inval_dcache_inval,
                     `L15_PIPE0.l15_cpxencoder_inval_icache_inval, `L15_PIPE0.l15_cpxencoder_inval_way,
                     `L15_PIPE0.l15_cpxencoder_blockinitstore);
-        $display("   Data0: 0x%x", `L15_PIPE0.l15_cpxencoder_data_0);
-        $display("   Data1: 0x%x", `L15_PIPE0.l15_cpxencoder_data_1);
-        $display("   Data2: 0x%x", `L15_PIPE0.l15_cpxencoder_data_2);
-        $display("   Data3: 0x%x", `L15_PIPE0.l15_cpxencoder_data_3);
+        $display("   Data0: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_63_0]);
+        $display("   Data1: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_127_64]);
+        $display("   Data2: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_191_128]);
+        $display("   Data3: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_255_192]);
+        $display("   Data4: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_319_256]);
+        $display("   Data5: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_383_320]);
+        $display("   Data6: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_447_384]);
+        $display("   Data7: 0x%x", `L15_PIPE0.l15_cpxencoder_data[`L15_UNPARAM_511_448]);
     end
 
     if (`L15_TOP0.noc1encoder.noc1encoder_noc1out_val && `L15_TOP0.noc1encoder.noc1encoder_noc1buffer_req_ack)
@@ -625,8 +633,14 @@ begin
                     `L15_TOP0.noc3encoder.l15_noc3encoder_req_mshrid, `L15_TOP0.noc3encoder.l15_noc3encoder_req_sequenceid, `L15_TOP0.noc3encoder.l15_noc3encoder_req_address);
         $display("   srcX: %d, srcY: %d", `L15_TOP0.noc3encoder.src_l2_xpos, `L15_TOP0.noc3encoder.src_l2_ypos);
         $display("   destX: %d, destY: %d", `L15_TOP0.noc3encoder.dest_l2_xpos, `L15_TOP0.noc3encoder.dest_l2_ypos);
-        $display("   Data0: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data_0);
-        $display("   Data1: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data_1);
+        $display("   Data0: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_63_0]);
+        $display("   Data1: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_127_64]);
+        $display("   Data2: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_191_128]);
+        $display("   Data3: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_255_192]);
+        $display("   Data4: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_319_256]);
+        $display("   Data5: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_383_320]);
+        $display("   Data6: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_447_384]);
+        $display("   Data7: 0x%x", `L15_TOP0.noc3encoder.l15_noc3encoder_req_data[`L15_UNPARAM_511_448]);
     end
 
     do_print_stage_TILE0 = ((`L15_PIPE0.val_s1 && !`L15_PIPE0.stall_s1) || (`L15_PIPE0.val_s2 && !`L15_PIPE0.stall_s2) || (`L15_PIPE0.val_s3 && !`L15_PIPE0.stall_s3));
@@ -848,6 +862,7 @@ begin
             $write("Stage 3 status: ");
             $write("   Operation: "); decode_predecode_reqtype(`L15_PIPE0.predecode_reqtype_s3);
             $display("   TILE0 S3 Address: 0x%x", `L15_PIPE0.address_s3);
+            $display("   Cacheline: 0x%x", `L15_PIPE0.cache_subline_s3);
             `ifndef NO_RTL_CSM
             if ((`L15_PIPE0.noc1_homeid_source_s3 == `L15_HOMEID_SRC_HMT && `L15_PIPE0.noc1_req_val_s3)
                 || (`L15_PIPE0.noc3_homeid_source_s3 == `L15_HOMEID_SRC_HMT && `L15_PIPE0.noc3_req_val_s3))
