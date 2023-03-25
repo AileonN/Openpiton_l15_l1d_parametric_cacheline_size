@@ -72,6 +72,7 @@ const char info[] = {
 "L1D Size / Assoc:  %3d kB / %d          \\r\\n"
 "L15 Size / Assoc:  %3d kB / %d          \\r\\n"
 "L2  Size / Assoc:  %3d kB / %d          \\r\\n"
+"L15 L1D Block Size: %d                  \\r\\n"
 "----------------------------------------\\r\\n\\r\\n\\r\\n"
 };
 
@@ -93,7 +94,8 @@ const char info[] = {
        int(os.environ['CONFIG_L15_SIZE'])/1024,
        int(os.environ['CONFIG_L15_ASSOCIATIVITY']),
        int(os.environ['CONFIG_L2_SIZE'] )/1024,
-       int(os.environ['CONFIG_L2_ASSOCIATIVITY'] ))
+       int(os.environ['CONFIG_L2_ASSOCIATIVITY']),
+       int(os.environ['CONFIG_L15_L1D_CACHELINE_SIZE']))
 
     with open(dtsPath + '/info.h','w') as file:
         file.write(tmpStr)

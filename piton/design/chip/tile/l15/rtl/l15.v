@@ -82,10 +82,7 @@ module l15 (
     output [`L15_THREADID_MASK]             l15_transducer_threadid,
     output                                  l15_transducer_prefetch,
     output                                  l15_transducer_f4b,
-    output [63:0]                           l15_transducer_data_0,
-    output [63:0]                           l15_transducer_data_1,
-    output [63:0]                           l15_transducer_data_2,
-    output [63:0]                           l15_transducer_data_3,
+    output [`L1_MAX_DATA_PACKETS_BITS_WIDTH-1:0] l15_transducer_data,
     output                                  l15_transducer_inval_icache_all_way,
     output                                  l15_transducer_inval_dcache_all_way,
     output [`L15_PADDR_MASK]                l15_transducer_inval_address,
@@ -228,7 +225,7 @@ l15_csm l15_csm(
             ie. we can have a header ready signal + data ready signal
 */
 
-wire [511:0] noc2_data;
+wire [64*`NOC2_MAX_FLIT_NUMBER-1:0] noc2_data;
 wire noc2_data_val;
 wire noc2_data_ack;
 
@@ -252,10 +249,7 @@ wire noc2decoder_l15_icache_type;
 wire noc2decoder_l15_f4b;
 wire [`MSG_TYPE_WIDTH-1:0] noc2decoder_l15_reqtype;
 wire [`L15_MESI_STATE_WIDTH-1:0] noc2decoder_l15_ack_state;
-wire [63:0] noc2decoder_l15_data_0;
-wire [63:0] noc2decoder_l15_data_1;
-wire [63:0] noc2decoder_l15_data_2;
-wire [63:0] noc2decoder_l15_data_3;
+wire [(64*`NOC2_MAX_DATA_FLIT_NUMBER)-1:0] noc2decoder_l15_data;
 wire [`L15_PADDR_HI:0] noc2decoder_l15_address;
 wire [3:0] noc2decoder_l15_fwd_subcacheline_vector;
 wire [`PACKET_HOME_ID_WIDTH-1:0] noc2decoder_l15_src_homeid;
@@ -283,10 +277,7 @@ noc2decoder noc2decoder(
     .noc2decoder_l15_f4b(noc2decoder_l15_f4b),
     .noc2decoder_l15_reqtype(noc2decoder_l15_reqtype),
     .noc2decoder_l15_ack_state(noc2decoder_l15_ack_state),
-    .noc2decoder_l15_data_0(noc2decoder_l15_data_0),
-    .noc2decoder_l15_data_1(noc2decoder_l15_data_1),
-    .noc2decoder_l15_data_2(noc2decoder_l15_data_2),
-    .noc2decoder_l15_data_3(noc2decoder_l15_data_3),
+    .noc2decoder_l15_data (noc2decoder_l15_data),
     .noc2decoder_l15_address(noc2decoder_l15_address),
     .noc2decoder_l15_fwd_subcacheline_vector(noc2decoder_l15_fwd_subcacheline_vector),
     .noc2decoder_l15_src_homeid(noc2decoder_l15_src_homeid),
@@ -347,8 +338,7 @@ wire noc3encoder_noc3buffer_req_ack;
 wire l15_noc3encoder_req_val;
 wire noc3buffer_noc3encoder_req_val;
 wire [`L15_NOC3_REQTYPE_WIDTH-1:0] l15_noc3encoder_req_type;
-wire [63:0] l15_noc3encoder_req_data_0;
-wire [63:0] l15_noc3encoder_req_data_1;
+wire [`CONFIG_L15_CACHELINE_WIDTH-1:0] l15_noc3encoder_req_data;
 wire [`L15_MSHR_ID_WIDTH-1:0] l15_noc3encoder_req_mshrid;
 wire [1:0] l15_noc3encoder_req_sequenceid;
 wire [`L15_THREADID_MASK] l15_noc3encoder_req_threadid;
@@ -359,8 +349,7 @@ wire [3:0] l15_noc3encoder_req_fwdack_vector;
 wire [`PACKET_HOME_ID_WIDTH-1:0] l15_noc3encoder_req_homeid;
 
 wire [`L15_NOC3_REQTYPE_WIDTH-1:0] noc3buffer_noc3encoder_req_type;
-wire [63:0] noc3buffer_noc3encoder_req_data_0;
-wire [63:0] noc3buffer_noc3encoder_req_data_1;
+wire [`CONFIG_L15_CACHELINE_WIDTH-1:0] noc3buffer_noc3encoder_req_data;
 wire [`L15_MSHR_ID_WIDTH-1:0] noc3buffer_noc3encoder_req_mshrid;
 wire [1:0] noc3buffer_noc3encoder_req_sequenceid;
 wire [`L15_THREADID_MASK] noc3buffer_noc3encoder_req_threadid;
@@ -398,7 +387,7 @@ sram_l15_tag dtag(
 // DCACHE
 wire l15_dcache_val_s2;
 wire l15_dcache_rw_s2;
-wire [(`L15_CACHE_INDEX_WIDTH+`L15_WAY_WIDTH)-1:0] l15_dcache_index_s2;
+wire [(`L15_CACHE_INDEX_WIDTH+`L15_WAY_WIDTH+`L15_SUBLINE_INDEX_WIDTH)-1:0] l15_dcache_index_s2;
 wire [127:0] l15_dcache_write_data_s2;
 wire [127:0] l15_dcache_write_mask_s2;
 wire [127:0] dcache_l15_dout_s3;
@@ -479,8 +468,8 @@ sram_l15_hmt hmt(
 wire pipe_mshr_writereq_val_s1;
 wire [`L15_MSHR_WRITE_TYPE_WIDTH-1:0] pipe_mshr_writereq_op_s1;
 wire [`L15_PADDR_HI:0] pipe_mshr_writereq_address_s1;
-wire [127:0] pipe_mshr_writereq_write_buffer_data_s1;
-wire [15:0] pipe_mshr_writereq_write_buffer_byte_mask_s1;
+wire [`CONFIG_L15_CACHELINE_WIDTH-1:0] pipe_mshr_writereq_write_buffer_data_s1;
+wire [`L15_LINE_SIZE-1:0] pipe_mshr_writereq_write_buffer_byte_mask_s1;
 wire [`L15_CONTROL_WIDTH-1:0] pipe_mshr_writereq_control_s1;
 wire [`L15_MSHR_ID_WIDTH-1:0] pipe_mshr_writereq_mshrid_s1;
 wire [`L15_THREADID_MASK] pipe_mshr_writereq_threadid_s1;
@@ -496,8 +485,8 @@ wire [(2*`L15_NUM_THREADS)-1:0] mshr_pipe_st_way_s1;
 wire [(`L15_MESI_TRANS_STATE_WIDTH*`L15_NUM_THREADS)-1:0] mshr_pipe_st_state_s1;
 wire pipe_mshr_write_buffer_rd_en_s2;
 wire [`L15_THREADID_MASK] pipe_mshr_threadid_s2;
-wire [127:0]mshr_pipe_write_buffer_s2;
-wire [15:0] mshr_pipe_write_buffer_byte_mask_s2;
+wire [`CONFIG_L15_CACHELINE_WIDTH-1:0]mshr_pipe_write_buffer_s2;
+wire [`L15_LINE_SIZE-1:0] mshr_pipe_write_buffer_byte_mask_s2;
 wire pipe_mshr_val_s3;
 wire [`L15_MSHR_WRITE_TYPE_WIDTH-1:0] pipe_mshr_op_s3;
 wire [`L15_MSHR_ID_WIDTH-1:0] pipe_mshr_mshrid_s3;
@@ -689,10 +678,7 @@ l15_pipeline pipeline(
     .noc2decoder_l15_f4b(noc2decoder_l15_f4b),
     .noc2decoder_l15_reqtype(noc2decoder_l15_reqtype),
     .noc2decoder_l15_ack_state(noc2decoder_l15_ack_state),
-    .noc2decoder_l15_data_0(noc2decoder_l15_data_0),
-    .noc2decoder_l15_data_1(noc2decoder_l15_data_1),
-    .noc2decoder_l15_data_2(noc2decoder_l15_data_2),
-    .noc2decoder_l15_data_3(noc2decoder_l15_data_3),
+    .noc2decoder_l15_data (noc2decoder_l15_data),
     .noc2decoder_l15_address(noc2decoder_l15_address),
     .noc2decoder_l15_fwd_subcacheline_vector(noc2decoder_l15_fwd_subcacheline_vector),
     .noc2decoder_l15_src_homeid(noc2decoder_l15_src_homeid),
@@ -755,10 +741,7 @@ l15_pipeline pipeline(
     .l15_cpxencoder_threadid             (l15_transducer_threadid),
     .l15_cpxencoder_prefetch             (l15_transducer_prefetch),
     .l15_cpxencoder_f4b                  (l15_transducer_f4b),
-    .l15_cpxencoder_data_0               (l15_transducer_data_0),
-    .l15_cpxencoder_data_1               (l15_transducer_data_1),
-    .l15_cpxencoder_data_2               (l15_transducer_data_2),
-    .l15_cpxencoder_data_3               (l15_transducer_data_3),
+    .l15_cpxencoder_data                 (l15_transducer_data),
     .l15_cpxencoder_inval_icache_all_way (l15_transducer_inval_icache_all_way),
     .l15_cpxencoder_inval_dcache_all_way (l15_transducer_inval_dcache_all_way),
     .l15_cpxencoder_inval_address        (l15_transducer_inval_address),
@@ -780,11 +763,10 @@ l15_pipeline pipeline(
     // .l15_noc1buffer_req_blkinitstore(l15_noc1buffer_req_blkinitstore),
     .l15_noc1buffer_req_data_0(l15_noc1buffer_req_data_0),
     .l15_noc1buffer_req_data_1(l15_noc1buffer_req_data_1),
+    .l15_noc3encoder_req_data(l15_noc3encoder_req_data),
     .l15_noc1buffer_req_csm_data(l15_noc1buffer_req_csm_data),
     .l15_noc3encoder_req_val(l15_noc3encoder_req_val),
     .l15_noc3encoder_req_type(l15_noc3encoder_req_type),
-    .l15_noc3encoder_req_data_0(l15_noc3encoder_req_data_0),
-    .l15_noc3encoder_req_data_1(l15_noc3encoder_req_data_1),
     .l15_noc3encoder_req_mshrid(l15_noc3encoder_req_mshrid),
     .l15_noc3encoder_req_sequenceid(l15_noc3encoder_req_sequenceid),
     .l15_noc3encoder_req_threadid(l15_noc3encoder_req_threadid),
@@ -990,8 +972,7 @@ noc3buffer noc3buffer(
     .rst_n(rst_n),
     .l15_noc3encoder_req_val(l15_noc3encoder_req_val),
     .l15_noc3encoder_req_type(l15_noc3encoder_req_type),
-    .l15_noc3encoder_req_data_0(l15_noc3encoder_req_data_0),
-    .l15_noc3encoder_req_data_1(l15_noc3encoder_req_data_1),
+    .l15_noc3encoder_req_data(l15_noc3encoder_req_data),
     .l15_noc3encoder_req_mshrid(l15_noc3encoder_req_mshrid),
     .l15_noc3encoder_req_sequenceid(l15_noc3encoder_req_sequenceid),
     .l15_noc3encoder_req_threadid(l15_noc3encoder_req_threadid),
@@ -1005,8 +986,7 @@ noc3buffer noc3buffer(
     // from buffer to encoder
     .noc3buffer_noc3encoder_req_val(noc3buffer_noc3encoder_req_val),
     .noc3buffer_noc3encoder_req_type(noc3buffer_noc3encoder_req_type),
-    .noc3buffer_noc3encoder_req_data_0(noc3buffer_noc3encoder_req_data_0),
-    .noc3buffer_noc3encoder_req_data_1(noc3buffer_noc3encoder_req_data_1),
+    .noc3buffer_noc3encoder_req_data(noc3buffer_noc3encoder_req_data),
     .noc3buffer_noc3encoder_req_mshrid(noc3buffer_noc3encoder_req_mshrid),
     .noc3buffer_noc3encoder_req_sequenceid(noc3buffer_noc3encoder_req_sequenceid),
     .noc3buffer_noc3encoder_req_threadid(noc3buffer_noc3encoder_req_threadid),
@@ -1023,8 +1003,7 @@ noc3encoder noc3encoder(
     .rst_n(rst_n),
     .l15_noc3encoder_req_val(noc3buffer_noc3encoder_req_val),
     .l15_noc3encoder_req_type(noc3buffer_noc3encoder_req_type),
-    .l15_noc3encoder_req_data_0(noc3buffer_noc3encoder_req_data_0),
-    .l15_noc3encoder_req_data_1(noc3buffer_noc3encoder_req_data_1),
+    .l15_noc3encoder_req_data(noc3buffer_noc3encoder_req_data),
     .l15_noc3encoder_req_mshrid(noc3buffer_noc3encoder_req_mshrid),
     .l15_noc3encoder_req_sequenceid(noc3buffer_noc3encoder_req_sequenceid),
     .l15_noc3encoder_req_threadid(noc3buffer_noc3encoder_req_threadid),
