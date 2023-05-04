@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 `include "l2.tmp.h"
-`include "l15.tmp.h"
 `include "define.tmp.h"
 
 module l2_pipe2_ctrl(
@@ -983,8 +982,8 @@ begin
     end
     else if (msg_type_S2_f == `MSG_TYPE_WB_REQ)
     begin
-        l2_load_64B_S2 = (`L15_LINE_SIZE == 64) ? y : n;
-        l2_load_32B_S2 = (`L15_LINE_SIZE == 32) ? y : n;
+        l2_load_64B_S2 = (msg_length_S2_f == 10) ? y : n;
+        l2_load_32B_S2 = (msg_length_S2_f == 6) ? y : n;
     end
 `ifdef L2_SEND_NC_REQ
     else if (msg_type_S2_f == `MSG_TYPE_NC_LOAD_MEM_ACK && msg_length_S2_f == 4)

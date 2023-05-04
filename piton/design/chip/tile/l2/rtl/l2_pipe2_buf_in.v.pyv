@@ -63,8 +63,6 @@ module l2_pipe2_buf_in(
 
 
 <%
-import pyhplib
-from pyhplib import *
 L2_P2_HEADER_BUF_IN_SIZE = 4
 L2_P2_DATA_BUF_IN_SIZE = 16
 %>
@@ -106,13 +104,14 @@ begin
         begin
             msg_data_state_next = msg_data_state_8F;
         end
-        <% 
-if L15_LINE_SIZE > 16:
-    print("else if (data_in[`MSG_LENGTH] == `MSG_LENGTH_WIDTH'd%d)" % int(L15_MAX_DATA_PACKETS+2))
-    print("         begin")
-    print("         msg_data_state_next = msg_data_state_%dF;" % L15_MAX_DATA_PACKETS)
-    print("         end", end="") 
-%>
+        else if (data_in[`MSG_LENGTH] == `MSG_LENGTH_WIDTH'd10)
+        begin
+            msg_data_state_next = msg_data_state_8F;
+        end
+        else if (data_in[`MSG_LENGTH] == `MSG_LENGTH_WIDTH'd6)
+        begin
+            msg_data_state_next = msg_data_state_4F;
+        end
         else if (data_in[`MSG_LENGTH] == `MSG_LENGTH_WIDTH'd0)
         begin
             msg_data_state_next = msg_data_state_0F;

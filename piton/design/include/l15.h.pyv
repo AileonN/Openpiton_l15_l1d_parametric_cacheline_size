@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 `ifndef L15_H
 `define L15_H
 
-// `define L15_CACHELINE_WIDTH 128
 `define L15_HMT_ENTRY_WIDTH 32
 
 `define L15_UNPARAM_1_0 1:0
@@ -69,70 +68,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
    if 'PITON_ARIANE' in globals():
        print("// this is used in the ariane SV packages to derive the parameterization")
-       print("`define CONFIG_L1D_CACHELINE_WIDTH %d"  % (L1D_LINE_SIZE*8)) # constant at the moment
+       print("`define CONFIG_L1D_CACHELINE_WIDTH %d"  % (PITON_L15_L1D_LINE_SIZE*8)) 
        print("`define CONFIG_L1I_CACHELINE_WIDTH %d"  % 256) # constant at the moment
-       print("`define CONFIG_L15_CACHELINE_WIDTH %d"  % (L15_LINE_SIZE*8)) # constant at the moment
        print("`define CONFIG_L15_SIZE %d"             % CONFIG_L15_SIZE)
        print("`define CONFIG_L1D_SIZE %d"             % CONFIG_L1D_SIZE)
        print("`define CONFIG_L1I_SIZE %d"             % CONFIG_L1I_SIZE)
        print("`define CONFIG_L15_ASSOCIATIVITY %d"    % CONFIG_L15_ASSOCIATIVITY)
        print("`define CONFIG_L1D_ASSOCIATIVITY %d"    % CONFIG_L1D_ASSOCIATIVITY)
        print("`define CONFIG_L1I_ASSOCIATIVITY %d"    % CONFIG_L1I_ASSOCIATIVITY)
+       print("`define NOC_BITS_WIDTH %d" % 64)
+       print("`define NOC_BYTES_WIDTH %d" % 8)
        print("\n\n")
-
-   # 512
-   numentries = CONFIG_L15_SIZE / L15_LINE_SIZE
 
    #Fix array size to 16B 
    l15_data_array_size = 16  
-   print("`define L15_LINE_SIZE %d" % L15_LINE_SIZE)
-   print("`define L15_LINE_SIZE_WIDTH %d" % math.log(L15_LINE_SIZE,2))
-   print("`define L15_MAX_DATA_PACKETS %d" % L15_MAX_DATA_PACKETS)
-   print("`define L1D_LINE_SIZE_WIDTH %d" % math.log(L1D_LINE_SIZE,2))
-   print("`define L1D_MAX_DATA_PACKETS %d" % L1D_MAX_DATA_PACKETS)
-   print("`define L1D_MAX_DATA_PACKETS_BITS_WIDTH (`L1D_MAX_DATA_PACKETS * %d)" % NOC_BITS_WIDTH )
-   print("`define L1I_MAX_DATA_PACKETS %d" % L1I_MAX_DATA_PACKETS)
-   print("`define L1I_MAX_DATA_PACKETS_BITS_WIDTH (`L1I_MAX_DATA_PACKETS * %d)" % NOC_BITS_WIDTH )
-   print("`define L1_MAX_DATA_PACKETS %d" % L1_MAX_DATA_PACKETS)
-   print("`define L1_MAX_DATA_PACKETS_BITS_WIDTH (`L1_MAX_DATA_PACKETS * %d)" % NOC_BITS_WIDTH )
+   print("`define L1I_LINE_SIZE %d" % 32) #Harcoded to 32B 
+   print("`define L1D_MAX_DATA_PACKETS `CONFIG_L1D_CACHELINE_WIDTH/`NOC_BITS_WIDTH")
+   print("`define L1_MAX_DATA_PACKETS ((`CONFIG_L1D_CACHELINE_WIDTH > `CONFIG_L1I_CACHELINE_WIDTH) ? `L1D_MAX_DATA_PACKETS : 4)")
+   print("`define L1_MAX_DATA_PACKETS_BITS_WIDTH (`L1_MAX_DATA_PACKETS * `NOC_BITS_WIDTH)")
    print("`define L15_DATA_ARRAY_SIZE %d" % l15_data_array_size )
    print("`define L15_DATA_ARRAY_SIZE_WIDTH %d" % math.log(l15_data_array_size, 2) )
-  
-   # 512
-   print("`define L15_NUM_ENTRIES %d" % numentries)
-   # 9
-   print("`define L15_NUM_ENTRIES_LOG2 %d" % int(math.log(numentries, 2)))
    # 4
    print("`define L15_WAY_COUNT %d" % CONFIG_L15_ASSOCIATIVITY)
    # 2
    print("`define L15_WAY_WIDTH %d" % int(math.log(CONFIG_L15_ASSOCIATIVITY, 2)))
-
-   l15_set_count = numentries / CONFIG_L15_ASSOCIATIVITY
-   l1d_set_count = CONFIG_L1D_SIZE / L1D_LINE_SIZE / CONFIG_L1D_ASSOCIATIVITY
-   if l15_set_count > l1d_set_count:
-      print("`define L15_WMT_EXTENDED_ALIAS")
-      print("`define L15_WMT_ALIAS_WIDTH %d" % int(math.log(l15_set_count/l1d_set_count, 2)))
-
-   print("`define L15_CACHELINE_WIDTH %d" % (L15_LINE_SIZE*8))
-
-   print("`define L15_ARRAY_PER_CACHELINE %d" % (L15_LINE_SIZE / l15_data_array_size) )
-   print("`define L15_DATA_ARRAY_HEIGHT_LOG2 %d" % math.log(numentries*(L15_LINE_SIZE/l15_data_array_size), 2) )
-
-   num_sublines=L15_LINE_SIZE/l15_data_array_size
-   log2_subline=int(math.log(num_sublines, 2))
-   for i in range(int(num_sublines)):
-     print("`define L15_SUBLINE_%d %d'd%d" %  (int(i),log2_subline,int(i)))
-   
-
 %>
 
 // cache size can be 64B, 512 bits, but array width is kept 16B(128 bits), and 4 array items form a cacheline 
+`define L15_SUBLINE_0 2'd0
+`define L15_SUBLINE_1 2'd1
+`define L15_SUBLINE_2 2'd2
+`define L15_SUBLINE_3 2'd3
 `define L15_DATA_ARRAY_WIDTH (`L15_DATA_ARRAY_SIZE * 8)
-`define L15_DATA_ARRAY_HEIGHT (`L15_NUM_ENTRIES * `L15_ARRAY_PER_CACHELINE )
-`define L15_SUBLINE_INDEX_WIDTH (`L15_LINE_SIZE_WIDTH - `L15_DATA_ARRAY_SIZE_WIDTH)
 `define L15_SUBLINE_MASK 5:4
-`define L1D_REQ_BLOCK_MASK `L15_LINE_SIZE_WIDTH-1:`L1D_LINE_SIZE_WIDTH
-`define L1D_SUBLINE_INDEX_WIDTH (`L1D_LINE_SIZE_WIDTH - `L15_DATA_ARRAY_SIZE_WIDTH)
 
 `define L15_MESI_STATE_WIDTH 2
 `define L15_MESI_STATE_I 2'd0
@@ -165,72 +133,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 `define L15_WAYID_WAY6 `L15_WAY_WIDTH'd6
 `define L15_WAYID_WAY7 `L15_WAY_WIDTH'd7
 
-// 7
-`define L15_NUM_4WAY_ENTRIES_LOG2 (`L15_NUM_ENTRIES_LOG2-2)
-// Cache index is the index to the tag array.
-// The data array index should consider the subline index (if cache line is larger than 16B)
-// 7
-`define L15_CACHE_INDEX_WIDTH (`L15_NUM_4WAY_ENTRIES_LOG2)
-`define L15_CACHE_INDEX_MASK `L15_CACHE_INDEX_WIDTH-1:0
-`define L15_CACHE_INDEX_VECTOR_WIDTH (`L15_NUM_ENTRIES/4)
-
-// L1D has a fixed 64B cache lines
-`define L15_IDX_LOW (`L15_LINE_SIZE_WIDTH)
-`define L1D_IDX_LOW (`L1D_LINE_SIZE_WIDTH)
-// 10
-`define L15_IDX_HI (`L15_CACHE_INDEX_WIDTH+`L15_IDX_LOW-1)
-
 `define L15_CACHE_TAG_RAW_WIDTH 33
 `define L15_CACHE_TAG_RAW_SRAM_WIDTH 33*`L15_WAY_COUNT
-// 40 - 4 (16B line) - 7 (index width) = 29
-// 40 - 6            - 5               = 29
-`define L15_CACHE_TAG_WIDTH (`L15_PADDR_WIDTH - `L15_LINE_SIZE_WIDTH - `L15_CACHE_INDEX_WIDTH)
-// 11
-`define L15_CACHE_TAG_LOW (`L15_IDX_HI + 1)
 // 39
 `define L15_CACHE_TAG_HI (`L15_PADDR_HI)
-
-// this need to be defined when L1.5 has more sets than L1D
-// for correct operations
-// `define L15_WMT_EXTENDED_ALIAS
-
-`ifdef L15_WMT_EXTENDED_ALIAS
-// `define L15_WMT_ALIAS_WIDTH 4
-// `define L15_WMT_ALIAS_LOW `L1D_SET_IDX_HI+1
-`define L15_WMT_ALIAS_LOW `L1D_ADDRESS_HI+1
-// `define L15_WMT_ALIAS_HI `L15_WMT_ALIAS_LOW + `L15_WMT_ALIAS_WIDTH - 1
-`define L15_WMT_ALIAS_HI `L15_WMT_ALIAS_LOW + `L15_WMT_ALIAS_WIDTH - 1
-`define L15_WMT_ALIAS_MASK `L15_WMT_ALIAS_HI:`L15_WMT_ALIAS_LOW
-`else
-`define L15_WMT_ALIAS_WIDTH 0
-`endif
-
-`define L15_WMT_DATA_WIDTH (`L15_WAY_WIDTH+`L15_WMT_ALIAS_WIDTH)
-`define L15_WMT_DATA_MASK `L15_WMT_DATA_WIDTH-1:0
-`define L15_WMT_VALID_MASK `L15_WMT_DATA_WIDTH
-`define L15_WMT_ENTRY_WIDTH (`L15_WMT_DATA_WIDTH+1)
-`define L15_WMT_ENTRY_MASK `L15_WMT_ENTRY_WIDTH-1:0
-
-// `define L15_WMT_ENTRY_0_MASK 1*`L15_WMT_ENTRY_WIDTH-1 -: `L15_WMT_ENTRY_WIDTH
-// `define L15_WMT_ENTRY_1_MASK 2*`L15_WMT_ENTRY_WIDTH-1 -: `L15_WMT_ENTRY_WIDTH
-// `define L15_WMT_ENTRY_2_MASK 3*`L15_WMT_ENTRY_WIDTH-1 -: `L15_WMT_ENTRY_WIDTH
-// `define L15_WMT_ENTRY_3_MASK 4*`L15_WMT_ENTRY_WIDTH-1 -: `L15_WMT_ENTRY_WIDTH
-// `define L15_WMT_ENTRY_0_VALID_MASK 1*`L15_WMT_ENTRY_WIDTH-1
-// `define L15_WMT_ENTRY_1_VALID_MASK 2*`L15_WMT_ENTRY_WIDTH-1
-// `define L15_WMT_ENTRY_2_VALID_MASK 3*`L15_WMT_ENTRY_WIDTH-1
-// `define L15_WMT_ENTRY_3_VALID_MASK 4*`L15_WMT_ENTRY_WIDTH-1
-
-<%
-  template='''
-    `define L15_WMT_ENTRY___WAY_MASK (__WAY+1)*`L15_WMT_ENTRY_WIDTH-1 -: `L15_WMT_ENTRY_WIDTH
-    `define L15_WMT_ENTRY___WAY_VALID_MASK (__WAY+1)*`L15_WMT_ENTRY_WIDTH-1
-  '''
-  GenFor(template, CONFIG_L1D_ASSOCIATIVITY)
-%>
-
-`define L15_WMT_WIDTH `L1D_WAY_COUNT*`L15_WMT_ENTRY_WIDTH
-`define L15_WMT_MASK `L15_WMT_WIDTH-1:0
-`define L15_WMT_ENTRY_COUNT `L1D_SET_COUNT
 
 // LRU array storage
 // keeps 6 bits per cache set: 4 "used" bits, 1 each cache line, and 2 bits for wayid round robin (4w)
@@ -422,13 +328,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                         `PCX_REQTYPE_WIDTH  + \
                         `L15_THREADID_WIDTH + \
                         `L15_WAY_WIDTH      + \
-                        `TLB_CSM_WIDTH)
+                        `TLB_CSM_WIDTH )
 `endif
-`define L15_RTRN_WIDTH (16 + `L1_MAX_DATA_PACKETS_BITS_WIDTH + \
-                        `CPX_RESTYPE_WIDTH  +      \
-                        `L15_THREADID_WIDTH +      \
-                        2 * `L15_WAY_WIDTH + `L15_PADDR_WIDTH)
-
 `define L15_FETCH_STATE_WIDTH 3
 `define L15_FETCH_STATE_NORMAL 3'd0
 `define L15_FETCH_STATE_PCX_WRITEBACK_DONE 3'd1
@@ -681,24 +582,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 `define NOC3_RES_HEADER_1 4'd0
 `define NOC3_RES_DATA_1 4'd1
 `define NOC3_RES_DATA_2 4'd2
-<%
-   log2_noc3_packets_req_data=math.ceil((math.log(int(L15_MAX_DATA_PACKETS+2), 2)))
-   
-   for i in range(int(L15_MAX_DATA_PACKETS)):
-     print("`define NOC3_REQ_DATA_%d %d'd%d" %  (int(i+1),log2_noc3_packets_req_data,int(i+3)))
-
-   #4 (L1I) + header
-   noc2_max_packets = 4 + 1;
-   if (L1I_LINE_SIZE<L15_LINE_SIZE):
-      noc2_max_packets=L15_MAX_DATA_PACKETS + 1; #l15 packets of data + header
-
-   log2_noc2_packets=math.ceil((math.log(int(noc2_max_packets), 2)))
-
-   #Data packets + 1 header
-   print("`define NOC2_MAX_FLIT_NUMBER %d" % int(noc2_max_packets) )
-   print("`define NOC2_MAX_FLIT_NUMBER_LOG2 %d" % log2_noc2_packets)
-   print("`define NOC2_MAX_DATA_FLIT_NUMBER %d" % (noc2_max_packets-1))
-%>
+`define NOC3_REQ_DATA_1 4'd3
+`define NOC3_REQ_DATA_2 4'd4
+`define NOC3_REQ_DATA_3 4'd5
+`define NOC3_REQ_DATA_4 4'd6
+`define NOC3_REQ_DATA_5 4'd7
+`define NOC3_REQ_DATA_6 4'd8
+`define NOC3_REQ_DATA_7 4'd9
+`define NOC3_REQ_DATA_8 4'd10
 
 // NOC2 BUFFER
 `define NOC2_STATE_WIDTH 2

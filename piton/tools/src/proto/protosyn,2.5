@@ -456,7 +456,7 @@ def setParserOptions(parser):
     parser.add_option("--config_l1d_size", dest="config_l1d_size", action="store", default=8192)
     parser.add_option("--config_l15_size", dest="config_l15_size", action="store", default=8192)
     parser.add_option("--config_l2_size", dest="config_l2_size",   action="store", default=65536)
-    parser.add_option("--config_l15_l1d_cacheline_size", dest="config_l15_cacheline_size",   action="store", default=64)
+    parser.add_option("--config_l15_l1d_cacheline_size", dest="config_l15_l1d_cacheline_size",   action="store", default=64)
     parser.add_option("--config_l1i_associativity", dest="config_l1i_associativity",   action="store", default=4)
     parser.add_option("--config_l1d_associativity", dest="config_l1d_associativity",   action="store", default=4)
     parser.add_option("--config_l15_associativity", dest="config_l15_associativity",   action="store", default=4)
@@ -846,8 +846,7 @@ def main():
                  ' -config_l1d_associativity=' + str(options.config_l1d_associativity) + \
                  ' -config_l15_associativity=' + str(options.config_l15_associativity) + \
                  ' -config_l2_associativity='  + str(options.config_l2_associativity) + \
-                 ' -config_l1d_cacheline_size=' + str(options.config_l1d_cacheline_size) + \
-                 ' -config_l15_cacheline_size=' + str(options.config_l15_cacheline_size)
+                 ' -config_l15_l1d_cacheline_size=' + str(options.config_l15_l1d_cacheline_size)
 
         if options.core == 'pico':
             config += ' -pico'

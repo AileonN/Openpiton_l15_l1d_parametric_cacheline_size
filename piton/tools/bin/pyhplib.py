@@ -85,20 +85,10 @@ CONFIG_L15_L1D_CACHELINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZ
 CONFIG_L2_ASSOCIATIVITY = int(os.environ.get('CONFIG_L2_ASSOCIATIVITY', '4'))
 # CONFIG_L2_ASSOCIATIVITY = 8
 # constants, not configurable
-L1I_LINE_SIZE = 32
-L1D_LINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZE', '64'))
-L15_LINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZE', '64'))
+PITON_L15_L1D_LINE_SIZE = int(os.environ.get('CONFIG_L15_L1D_CACHELINE_SIZE', '64'))
 L2_LINE_SIZE = 64
 
-#Packets of 64b/8B
-NOC_BYTES_WIDTH = 8
-NOC_BITS_WIDTH = NOC_BYTES_WIDTH * 8
-L1_MAX_DATA_PACKETS = 4
-L1I_MAX_DATA_PACKETS = 4
-L1D_MAX_DATA_PACKETS = L1D_LINE_SIZE/NOC_BYTES_WIDTH
-L15_MAX_DATA_PACKETS = L15_LINE_SIZE/NOC_BYTES_WIDTH
-if L1D_LINE_SIZE > L1I_LINE_SIZE:
-  L1_MAX_DATA_PACKETS = L1D_LINE_SIZE/NOC_BYTES_WIDTH
+
 
 #########################################################
 # BRAM configurations
@@ -112,12 +102,12 @@ BRAM_CONFIG = dict()
 # linesize = 16   # TODO: magic number from lsu.h.pyv?
 # bram_l1d_tag_entries = CONFIG_L1D_SIZE / linesize
 # bram_l1d_depth = bram_l1d_tag_entries /  CONFIG_L1D_ASSOCIATIVITY
-bram_l15_entries = CONFIG_L15_SIZE / L15_LINE_SIZE
+bram_l15_entries = CONFIG_L15_SIZE / PITON_L15_L1D_LINE_SIZE
 bram_l15_depth = bram_l15_entries / CONFIG_L15_ASSOCIATIVITY
 bram_l2_entries = CONFIG_L2_SIZE / L2_LINE_SIZE
 bram_l2_depth = bram_l2_entries / CONFIG_L2_ASSOCIATIVITY
 
-l15_array_per_cacheline = L15_LINE_SIZE / 16
+l15_array_per_cacheline = PITON_L15_L1D_LINE_SIZE / 16
 
 # # TODO: change magic numbers to defines/parameters
 BRAM_CONFIG["fp_regfile"] = BramCfg(128, 78)
