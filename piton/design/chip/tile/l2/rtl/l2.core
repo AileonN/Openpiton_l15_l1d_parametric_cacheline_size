@@ -66,8 +66,7 @@ generate:
                           [l2_pipe2_dpath.v.pyv, l2_pipe2_dpath.tmp.v],      
                           [l2_priority_encoder.v.pyv, l2_priority_encoder.tmp.v], 
                           [l2_smc.v.pyv, l2_smc.tmp.v],              
-                          [l2_state.v.pyv, l2_state.tmp.v],
-                          [l2_config_regs.v.pyv, l2_config_regs.tmp.v]]            
+                          [l2_state.v.pyv, l2_state.tmp.v]]            
                           
    
 

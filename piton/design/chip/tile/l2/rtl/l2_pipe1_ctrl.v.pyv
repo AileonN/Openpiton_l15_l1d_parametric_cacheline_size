@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //====================================================================================================
 
 `include "l2.tmp.h"
-`include "l15.tmp.h"
 `include "define.tmp.h"
 
 module l2_pipe1_ctrl(
@@ -122,7 +121,8 @@ module l2_pipe1_ctrl(
     input wire l2_tag_hit_S2,
     input wire l2_evict_S2,
     input wire l2_wb_S2,
-    input wire l2_data_ack_l15line_64_32_S2,
+    input wire l2_data_ack_l15line_64_S2,
+    input wire l2_data_ack_l15line_32_S2,
     input wire [`L2_MESI_BITS-1:0] l2_way_state_mesi_S2,
     input wire [`L2_VD_BITS-1:0] l2_way_state_vd_S2,
     input wire [`L2_DI_BIT-1:0] l2_way_state_cache_type_S2,
@@ -334,9 +334,6 @@ module l2_pipe1_ctrl(
 
 
 <%
-import pyhplib
-from pyhplib import *
-
 L2_OWNER_BITS = 6
 L2_DIR_ARRAY_WIDTH = 64
 %>
@@ -2364,11 +2361,11 @@ begin
     begin
         l2_load_data_subline_S2_next = `L2_DATA_SUBLINE_0;
     end
-    else if (valid_S2 && !(stall_real_S2) && (l2_ifill_32B_S2 || l2_load_noshare_32B_S2 || (l2_data_ack_l15line_64_32_S2 && `L15_LINE_SIZE==32)) && (l2_load_data_subline_S2_f == `L2_DATA_SUBLINE_1))
+    else if (valid_S2 && !(stall_real_S2) && (l2_ifill_32B_S2 || l2_load_noshare_32B_S2 || l2_data_ack_l15line_32_S2) && (l2_load_data_subline_S2_f == `L2_DATA_SUBLINE_1))
     begin
         l2_load_data_subline_S2_next = `L2_DATA_SUBLINE_0;
     end
-    else if (valid_S2 && !(stall_real_S2) && (l2_wb_S2 || l2_ifill_32B_S2 || l2_load_noshare_32B_S2 || l2_load_noshare_64B_S2 || l2_data_ack_l15line_64_32_S2))
+    else if (valid_S2 && !(stall_real_S2) && (l2_wb_S2 || l2_ifill_32B_S2 || l2_load_noshare_32B_S2 || l2_load_noshare_64B_S2 || l2_data_ack_l15line_64_S2 || l2_data_ack_l15line_32_S2))
     begin
         l2_load_data_subline_S2_next = l2_load_data_subline_S2_f + 1; // for a 2-bit number, 3+1=0
     end
@@ -2391,14 +2388,13 @@ reg msg1_send_valid_S4;
 
 always @ *
 begin
-    if (l2_data_ack_l15line_64_32_S2)
+    if (l2_data_ack_l15line_64_S2) // if Stage 4 needs to send both DataAck and StoreMem, then we need 8 cycles totally
     begin
-        stall_load_S2 = (l2_load_data_subline_S2_f != <% 
-if L15_LINE_SIZE==64:
-    print("`L2_DATA_SUBLINE_3")
-else:
-    print("`L2_DATA_SUBLINE_1") %>) || (msg_state_S4_f == msg_state_0 && msg1_send_valid_S4 && valid_S4) ;
-                        // if Stage 4 needs to send both DataAck and StoreMem, then we need 8 cycles totally
+        stall_load_S2 = (l2_load_data_subline_S2_f != `L2_DATA_SUBLINE_3) || (msg_state_S4_f == msg_state_0 && msg1_send_valid_S4 && valid_S4);       
+    end
+    else if (l2_data_ack_l15line_32_S2)
+    begin
+        stall_load_S2 = (l2_load_data_subline_S2_f != `L2_DATA_SUBLINE_1) || (msg_state_S4_f == msg_state_0 && msg1_send_valid_S4 && valid_S4) ;
     end
     else if (l2_wb_S2 || l2_load_noshare_64B_S2)
     begin
@@ -2468,7 +2464,8 @@ reg [`L2_MSHR_STATE_BITS-1:0] mshr_state_in_S3_f;
 reg [`L2_MSHR_INDEX_WIDTH-1:0] mshr_pending_index_S3_f;
 reg special_addr_type_S3_f;
 reg req_recycle_S3_f;
-reg l2_data_ack_l15line_64_32_S3_f;
+reg l2_data_ack_l15line_64_S3_f;
+reg l2_data_ack_l15line_32_S3_f;
 
 always @ (posedge clk)
 begin
@@ -2492,7 +2489,8 @@ begin
         mshr_pending_index_S3_f <= 0;
         special_addr_type_S3_f <= 0;
         req_recycle_S3_f <= 0;
-        l2_data_ack_l15line_64_32_S3_f <= 0;
+        l2_data_ack_l15line_64_S3_f <= 0;
+        l2_data_ack_l15line_32_S3_f <= 0;
     end
     else if (!stall_S3)
     begin
@@ -2514,7 +2512,8 @@ begin
         mshr_pending_index_S3_f <= mshr_pending_index_S2_f;
         special_addr_type_S3_f <= special_addr_type_S2_f;
         req_recycle_S3_f <= req_recycle_S2;
-        l2_data_ack_l15line_64_32_S3_f <= l2_data_ack_l15line_64_32_S2;
+        l2_data_ack_l15line_32_S3_f <= l2_data_ack_l15line_32_S2;
+        l2_data_ack_l15line_64_S3_f <= l2_data_ack_l15line_64_S2;
     end
 end
 
@@ -2652,7 +2651,8 @@ reg [`L2_MSHR_INDEX_WIDTH-1:0] mshr_pending_index_S4_f;
 reg special_addr_type_S4_f;
 reg [`L2_DIR_ARRAY_WIDTH-1:0] dir_data_S4_f;
 reg req_recycle_S4_f;
-reg l2_data_ack_l15line_64_32_S4_f;
+reg l2_data_ack_l15line_64_S4_f;
+reg l2_data_ack_l15line_32_S4_f;
 
 
 always @ (posedge clk)
@@ -2678,7 +2678,8 @@ begin
         special_addr_type_S4_f <= 0;
         dir_data_S4_f <= 0;
         req_recycle_S4_f <= 0;
-        l2_data_ack_l15line_64_32_S4_f <= 0;
+        l2_data_ack_l15line_64_S4_f <= 0;
+        l2_data_ack_l15line_32_S4_f <= 0;
     end
     else if (!stall_S4)
     begin
@@ -2701,7 +2702,8 @@ begin
         special_addr_type_S4_f <= special_addr_type_S3_f;
         dir_data_S4_f <= dir_data_S3;
         req_recycle_S4_f <= req_recycle_S3;
-        l2_data_ack_l15line_64_32_S4_f <= l2_data_ack_l15line_64_32_S3_f;
+        l2_data_ack_l15line_64_S4_f <= l2_data_ack_l15line_64_S3_f;
+        l2_data_ack_l15line_32_S4_f <= l2_data_ack_l15line_32_S3_f;
     end
 end
 
@@ -3487,11 +3489,11 @@ begin
     else if (msg0_send_valid_S4 && msg1_send_valid_S4 && valid_S4
     && !(dir_data_stall_S4 || (msg_send_valid_S4 && !msg_send_ready_S4) || global_stall_S4))
     begin
-        if (msg_state_S4_f == msg_state_0 && (~l2_data_ack_l15line_64_32_S4_f && l2_load_data_subline_S4_f == <%
-if L15_LINE_SIZE==64:
-    print("`L2_DATA_SUBLINE_3")
-else:
-    print("`L2_DATA_SUBLINE_1") %>))
+       if (msg_state_S4_f == msg_state_0 && (~l2_data_ack_l15line_64_S4_f && l2_load_data_subline_S4_f == `L2_DATA_SUBLINE_3))
+        begin
+            msg_state_S4_next = msg_state_1;
+        end
+        else if (msg_state_S4_f == msg_state_0 && (~l2_data_ack_l15line_32_S4_f && l2_load_data_subline_S4_f == `L2_DATA_SUBLINE_1))
         begin
             msg_state_S4_next = msg_state_1;
         end
@@ -3752,14 +3754,8 @@ begin
             end
             else if (cache_type_S4_f == `MSG_CACHE_TYPE_DATA)
             begin
-                msg_send_length_S4 = `L1D_MAX_DATA_PACKETS;
-                msg_send_data_size_S4 = <% 
-if L15_LINE_SIZE==64: 
-    print("`MSG_DATA_SIZE_64B;")
-elif L15_LINE_SIZE==32:
-    print("`MSG_DATA_SIZE_32B;")
-else:
-    print("`MSG_DATA_SIZE_16B;") %>
+                msg_send_length_S4 = (data_size_S4_f == `MSG_DATA_SIZE_64B) ? 4'b1000 : (data_size_S4_f == `MSG_DATA_SIZE_32B) ? 3'b100 : 2'b10; //Num of data flits 
+                msg_send_data_size_S4 = data_size_S4_f;
                 msg_send_cache_type_S4 = cache_type_S4_f;
                 msg_send_mshrid_S4 = mshrid_S4; 
                 if (l2_load_data_subline_S4_f == `L2_DATA_SUBLINE_0)
@@ -3942,7 +3938,7 @@ end
 always @ *
 begin
     msg_stall_S4 = msg0_send_valid_S4 && msg1_send_valid_S4
-               && (msg_state_S4_f == msg_state_0) && !l2_data_ack_l15line_64_32_S4_f; 
+               && (msg_state_S4_f == msg_state_0) && !l2_data_ack_l15line_64_S4_f && !l2_data_ack_l15line_32_S4_f; 
 end
 
 
