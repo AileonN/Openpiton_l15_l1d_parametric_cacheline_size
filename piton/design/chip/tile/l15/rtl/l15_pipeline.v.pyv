@@ -4764,6 +4764,8 @@ begin
 end
 
 reg [(L15_L1D_LINE_SIZE*8)-1: 0] dcache_l15_dout_buf;
+//This index is created to avoid an error during the building, the index is only used when the cacheline size is 64B. 
+localparam INDEX_AUX_L15_DOUT_BUF = (L15_L1D_LINE_SIZE==64) ? (L15_L1D_LINE_SIZE*8)-129 : 128; 
 
 always @*
 begin
@@ -4779,7 +4781,7 @@ begin
     end
     if (L15_L1D_LINE_SIZE==64)
     begin
-        l15_noc3encoder_req_data[(L15_L1D_LINE_SIZE*8)-129: 128] = dcache_l15_dout_buf[(L15_L1D_LINE_SIZE*8)-129: 128];
+        l15_noc3encoder_req_data[INDEX_AUX_L15_DOUT_BUF : 128] = dcache_l15_dout_buf[INDEX_AUX_L15_DOUT_BUF : 128];
     end
     l15_noc3encoder_req_data[(L15_L1D_LINE_SIZE*8)-65 -: 64] = dcache_l15_dout_s3[`L15_UNPARAM_127_64];
     l15_noc3encoder_req_data[(L15_L1D_LINE_SIZE*8)-1 -: 64] = dcache_l15_dout_s3[`L15_UNPARAM_63_0];
