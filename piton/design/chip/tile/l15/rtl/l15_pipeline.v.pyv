@@ -2662,8 +2662,8 @@ end
 always @ *
 begin
     mshr_write_s2 =  
-                   (dcache_operation_s2 == `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_ME_FROM_MSHR && tagcheck_state_mes_s2) ||
-                   (dcache_operation_s2 == `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_LRSC_SET_FROM_MSHR && tagcheck_state_mes_s2) || 
+                   (dcache_operation_s2 == `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_ME_FROM_MSHR && tagcheck_state_me_s2) ||
+                   (dcache_operation_s2 == `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_LRSC_SET_FROM_MSHR && tagcheck_state_m_s2) || 
                    dcache_operation_s2 == `L15_DCACHE_WRITE_MSHR_WAY_FROM_MSHR || 
                    dcache_operation_s2 == `L15_DCACHE_WRITE_LRU_WAY_FROM_NOC2_AND_MSHR ; 
 end
@@ -2916,7 +2916,7 @@ begin
         end
         `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_ME_FROM_MSHR:
         begin
-            dcache_val_s2 = tagcheck_state_me_s2 || mshr_write_s2;
+            dcache_val_s2 = tagcheck_state_me_s2; 
             dcache_rw_s2 = `L15_DTAG_RW_WRITE;
             dcache_index_s2 = cache_index_s2;
             dcache_way_s2 = tagcheck_way_s2;
@@ -2925,7 +2925,7 @@ begin
         end
         `L15_DCACHE_WRITE_TAGCHECK_WAY_IF_LRSC_SET_FROM_MSHR: 
         begin
-            dcache_val_s2 = (tagcheck_state_m_s2 & tagcheck_lrsc_flag_s2) || mshr_write_s2; // Check state_m is just redundant, but need to be conservative
+            dcache_val_s2 = (tagcheck_state_m_s2 & tagcheck_lrsc_flag_s2);  // Check state_m is just redundant, but need to be conservative
             dcache_rw_s2 = `L15_DTAG_RW_WRITE;
             dcache_index_s2 = cache_index_s2;
             dcache_way_s2 = tagcheck_way_s2;
