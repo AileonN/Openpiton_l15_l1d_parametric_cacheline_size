@@ -28,7 +28,7 @@
 # Not intended to be run standalone
 #
 
-set GLOBAL_INCLUDE_DIRS "${DV_ROOT}/design/include ${DV_ROOT}/design/chipset/include ${DV_ROOT}/design/chip/tile/ariane/common/submodules/common_cells/include ${DV_ROOT}/design/chip/tile/ariane/common/local/util ${DV_ROOT}/design/chip/tile/ariane/corev_apu/register_interface/include"
+set GLOBAL_INCLUDE_DIRS "${DV_ROOT}/design/include ${DV_ROOT}/design/chipset/include ${DV_ROOT}/design/chip/tile/ariane/common/submodules/common_cells/include ${DV_ROOT}/design/chip/tile/ariane/common/local/util ${DV_ROOT}/design/chip/tile/ariane/corev_apu/register_interface/include ${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/include "
 
 # RTL include files
 set GLOBAL_INCLUDE_FILES [list \
@@ -541,6 +541,56 @@ set CHIP_RTL_IMPL_FILES [list \
     "${DV_ROOT}/design/chip/tile/ariane/common/submodules/common_cells/src/counter.sv" \
     "${DV_ROOT}/design/chip/tile/ariane/common/submodules/common_cells/src/delta_counter.sv" \
     "${DV_ROOT}/design/chip/tile/ariane/core/cvxif_fu.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/generic/hpdcache_params_pkg.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_pkg.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hwpf_stride/hwpf_stride_pkg.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_demux.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_fifo_reg.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_fxarb.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_rrarb.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_mux.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_prio_1hot_encoder.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/macros/behav/hpdcache_sram_1rw.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wbyteenable_1rw.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wmask_1rw.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_sram.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_sram_wbyteenable.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_sram_wmask.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_data_downsize.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/common/hpdcache_data_upsize.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hwpf_stride/hwpf_stride.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hwpf_stride/hwpf_stride_arb.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hwpf_stride/hwpf_stride_snooper.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hwpf_stride/hwpf_stride_wrapper.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_amo.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_cmo.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_ctrl.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_ctrl_pe.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_memarray.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_memctrl.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_miss_handler.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_mshr.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_mshr_to_cache_set.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_plru.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_rtab.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_uncached.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_wbuf.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/hpdcache_wbuf_wrapper.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_mem_req_read_arbiter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_mem_req_write_arbiter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_mem_resp_demux.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_mem_to_axi_read.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_mem_to_axi_write.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/cva6/cva6_hpdcache_subsystem.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/cva6/cva6_hpdcache_subsystem_axi_arbiter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/cva6/cva6_hpdcache_load_if_adapter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/cva6/cva6_hpdcache_if_adapter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_l15_req_arbiter.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_l15_resp_demux.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/utils/hpdcache_to_l15.sv" \
+    "${DV_ROOT}/design/chip/tile/ariane/cv-hpdcache/rtl/src/target/cva6/cva6_hpdcache_subsystem_l15_adapter.sv" \
+
 ]
 
 set CHIP_INCLUDE_FILES [list \
