@@ -27,33 +27,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 //==================================================================================================
-//  Filename      : rf_l15_lruarray.v
-//  Created On    : 2014-02-04 18:14:58
-//  Last Modified : 2014-02-13 18:30:34
+//  Filename      : rf_l15_lrsc_flag.v
+//  Created On    : 2018-11-08 18:14:58
+//  Last Modified : 
 //  Revision      :
-//  Author        : Tri Nguyen
+//  Author        : Fei Gao
 //  Company       : Princeton University
-//  Email         : trin@princeton.edu
+//  Email         : feig@princeton.edu
 //
 //  Description   :
 //
 //
 //==================================================================================================
-//rf_l15_lruarray.v
+//rf_l15_lrsc_flag.v
 
-`include "l15.tmp.h"
-<%
-  import pyhplib
-  from pyhplib import * 
-%>
 //`timescale 1 ns / 10 ps
 //`default_nettype none
 
-module rf_l15_lruarray #(
+`include "l15.tmp.h"
+
+module rf_l15_lrsc_flag #(
    parameter L15_L1D_LINE_SIZE = 64, 
    localparam L15_NUM_ENTRIES = `CONFIG_L15_SIZE/L15_L1D_LINE_SIZE,
-   localparam L15_CACHE_INDEX_WIDTH = $clog2(L15_NUM_ENTRIES) - 2
-
+   localparam L15_CACHE_INDEX_WIDTH = $clog2(L15_NUM_ENTRIES) - 2,
+   localparam L15_SET_COUNT = L15_NUM_ENTRIES / `CONFIG_L15_ASSOCIATIVITY
 ) (
    input wire clk,
    input wire rst_n,
@@ -63,24 +60,20 @@ module rf_l15_lruarray #(
 
    input wire write_valid,
    input wire [L15_CACHE_INDEX_WIDTH-1:0] write_index,
-   input wire [5:0] write_mask,
-   input wire [5:0] write_data,
+   input wire [3:0] write_mask,
+   input wire [3:0] write_data,
 
-   output wire [5:0] read_data
+   output wire [3:0] read_data
    );
-
-<%
-   linesize = 16
-   numset = int(int(CONFIG_L15_SIZE)/int(CONFIG_L15_ASSOCIATIVITY)/linesize)
-%>
-
-localparam L15_CACHE_INDEX_VECTOR_WIDTH = L15_NUM_ENTRIES/4;
-
 
 // reg read_valid_f;
 reg [L15_CACHE_INDEX_WIDTH-1:0] read_index_f;
+reg [L15_CACHE_INDEX_WIDTH-1:0] write_index_f;
+reg [3:0] write_data_f;
+reg [3:0] write_mask_f;
+reg write_valid_f;
 
-reg [5:0] regfile [0:L15_CACHE_INDEX_VECTOR_WIDTH-1];
+reg [3:0] regfile [0:L15_SET_COUNT-1];
 
 always @ (posedge clk)
 begin
@@ -101,18 +94,28 @@ assign read_data = regfile[read_index_f];
 // Write port
 always @ (posedge clk)
 begin
-   if (!rst_n)
-   begin
-      <%
-         for i in range (numset):
-            print("regfile[%d] <= 6'b0;" % (i))
-      %>
-      // regfile <= 1024'b0;
-   end
-   else
+   write_valid_f <= write_valid;
    if (write_valid)
    begin
-      regfile[write_index] <= (write_data & write_mask) | (regfile[write_index] & ~write_mask);
+      write_data_f <= write_data;
+      write_index_f <= write_index;
+      write_mask_f <= write_mask;
+   end
+end
+integer numset;
+always @ (posedge clk)
+begin
+   if (!rst_n)
+   begin
+      for (numset=0;numset<L15_SET_COUNT; numset = numset + 1) begin
+         regfile[numset] <= 4'b0;
+      end
+   end
+   else
+   if (write_valid_f)
+   begin
+      // regfile[write_index] <= (write_data & write_mask) | (regfile[write_index] & ~write_mask);
+      regfile[write_index_f] <= (write_data_f & write_mask_f) | (regfile[write_index_f] & ~write_mask_f);
    end
 end
 endmodule
