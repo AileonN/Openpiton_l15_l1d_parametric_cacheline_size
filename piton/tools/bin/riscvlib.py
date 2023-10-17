@@ -72,6 +72,7 @@ const char info[] = {
 "L1D Size / Assoc:  %3d kB / %d          \\r\\n"
 "L15 Size / Assoc:  %3d kB / %d          \\r\\n"
 "L2  Size / Assoc:  %3d kB / %d          \\r\\n"
+"L15/L1D Cacheline size %d               \\r\\n"
 "----------------------------------------\\r\\n\\r\\n\\r\\n"
 };
 

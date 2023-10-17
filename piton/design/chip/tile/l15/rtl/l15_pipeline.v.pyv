@@ -2151,6 +2151,8 @@ reg [L15_L1D_LINE_SIZE-1:0] write_mask_s1;
     reg [L15_L1D_LINE_SIZE-1:0] write_mask_8B_s1;
     reg [L15_L1D_LINE_SIZE-1:0] write_mask_16B_s1;
     reg [L15_L1D_LINE_SIZE-1:0] write_mask_ge16B_s1;
+`else
+    reg [5:0] offset_mask_s1 = {{6-L15_LINE_SIZE_WIDTH{1'b0}},{L15_LINE_SIZE_WIDTH{1'b1}}};
 `endif
 // reg odd_extended_word_s1;
 always @ *
@@ -2184,9 +2186,14 @@ begin
         end
     endcase
 
-`ifdef WRITE_BYTE_MASK //TODO: Adapat to work with bigger cachelines
+`ifdef WRITE_BYTE_MASK
 
-    write_mask_s1 = (predecode_address_s1[3]) ? {8'b0,pcxdecoder_l15_be} : {pcxdecoder_l15_be,8'b0};
+    write_mask_s1 = (offset_mask_s1[3])         ? (predecode_address_s1[3])     ? {8'b0,pcxdecoder_l15_be} : {pcxdecoder_l15_be,8'b0} :
+                                                    write_mask_s1;
+    write_mask_s1 = (offset_mask_s1[4])         ? (predecode_address_s1[4])     ? {16'b0,write_mask_s1} : {write_mask_s1,16'b0} :
+                                                    write_mask_s1;
+    write_mask_s1 = (offset_mask_s1[5])         ? (predecode_address_s1[5])     ? {32'b0,write_mask_s1} : {write_mask_s1,32'b0} :
+                                                    write_mask_s1;
 
 `else // ifndef WRITE_BYTE_MASK
     unshifted_write_mask_s1 =   (predecode_size_s1 == `MSG_DATA_SIZE_1B) ? {8'b1000_0000,{L15_L1D_LINE_SIZE-8{1'b0}}} :
