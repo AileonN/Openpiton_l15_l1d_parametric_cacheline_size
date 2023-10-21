@@ -85,7 +85,14 @@
 //                              this is not set, a default "fake"
 //                              simulated DRAM is used.
 
-module system (
+module system(
+
+`ifdef DISABLE_ALL_MONITORS
+    output wire                                 good_end,
+    output wire                                 bad_end,
+    input  wire                                 test_ena,
+`endif // DISABLE_ALL_MONITORS
+
 `ifndef PITON_FPGA_SYNTH
     // I/O settings
     input                                       chip_io_slew,
@@ -930,6 +937,13 @@ chipset chipset(
 `ifdef F1_BOARD
     .sys_clk(sys_clk),
 `else 
+
+`ifdef DISABLE_ALL_MONITORS
+    .good_end(good_end),
+    .bad_end(bad_end),
+    .test_ena(test_ena),
+`endif // DISABLE_ALL_MONITORS
+
 
 `ifdef PITON_CHIPSET_CLKS_GEN
 `ifdef PITON_CHIPSET_DIFF_CLK
