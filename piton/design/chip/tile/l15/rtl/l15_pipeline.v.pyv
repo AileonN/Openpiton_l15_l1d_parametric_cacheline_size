@@ -2463,6 +2463,7 @@ reg [L15_SUBLINE_INDEX_WIDTH-1:0] req_subline_s2_next, req_subline_s2;
 reg stall_real_s2, stall_load_s2;
 reg noc3_wb_s2;
 reg l1_inv_s2;
+reg l1_inv_multicyc_s2;
 reg load_64B_s2;
 reg l1d_load_s2 = 1'b0;
 reg mshr_write_s2 = 1'b0;
@@ -2477,7 +2478,7 @@ begin
     else if (!stall_s2)
     begin
         req_subline_s2 <= req_subline_s2_next;
-        cache_subline_s2 <= 0;  //address_s2_next[`L15_SUBLINE_MASK];
+        cache_subline_s2 <= 0;
     end
     else if (val_s2 && !stall_real_s2)
     begin 
@@ -2678,9 +2679,10 @@ end
 always @ *
 begin
     // TODO: should we consider the pure invalidation? CPX_GEN_XX_INVALIDATIOM 
-    l1_inv_s2 = ((cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_TAGCHECK_MES_AND_WAYMAP_VALID && tagcheck_state_mes_s2) ||
-                 (cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_LRU_MES_AND_WAYMAP_VALID && lru_state_mes_s2) ||
-                 (cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_FLUSH_MES_AND_WAYMAP_VALID && flush_state_mes_s2)) && !predecode_multicyc_invordowngrade_s2;
+    l1_inv_s2          = ((cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_TAGCHECK_MES_AND_WAYMAP_VALID && tagcheck_state_mes_s2) ||
+                         (cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_LRU_MES_AND_WAYMAP_VALID && lru_state_mes_s2) ||
+                         (cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_FLUSH_MES_AND_WAYMAP_VALID && flush_state_mes_s2)) && !predecode_multicyc_invordowngrade_s2;
+    l1_inv_multicyc_s2 = (cpx_operation_s2 == `L15_CPX_GEN_INVALIDATION_IF_TAGCHECK_MES_AND_WAYMAP_VALID && tagcheck_state_mes_s2) && predecode_multicyc_invordowngrade_s2;
 end
 
 
@@ -3523,6 +3525,7 @@ end
 reg [L15_SUBLINE_INDEX_WIDTH-1:0] cache_subline_s3;
 reg noc3_wb_s3_next, noc3_wb_s3;
 reg l1_inv_s3;
+reg l1_inv_multicyc_s3;
 reg load_64B_s3;
 reg l1d_load_s3;
 reg mshr_write_s3;
@@ -3534,6 +3537,7 @@ begin
         cache_subline_s3 <= 0;
         noc3_wb_s3 <= 1'b0;
         l1_inv_s3 <= 1'b0;
+        l1_inv_multicyc_s3 <= 1'b0;
         load_64B_s3 <= 1'b0;
         l1d_load_s3 <= 1'b0;
         mshr_write_s3 <= 1'b0;
@@ -3544,6 +3548,7 @@ begin
         cache_subline_s3 <= cache_subline_s2;
         noc3_wb_s3 <= noc3_wb_s2;
         l1_inv_s3 <= l1_inv_s2;
+        l1_inv_multicyc_s3 <= l1_inv_multicyc_s2;
         load_64B_s3 <= load_64B_s2;
         l1d_load_s3 <= l1d_load_s2;
         mshr_write_s3 <= mshr_write_s2;
@@ -3553,6 +3558,7 @@ begin
         cache_subline_s3 <= cache_subline_s3;
         noc3_wb_s3 <= noc3_wb_s3;
         l1_inv_s3 <= l1_inv_s3;
+        l1_inv_multicyc_s3 <= l1_inv_multicyc_s3;
         load_64B_s3 <= load_64B_s3;
         l1d_load_s3 <= l1d_load_s3;
         mshr_write_s3 <= mshr_write_s3;
@@ -4165,7 +4171,7 @@ reg cpx_atomic_bit_s3;
 reg cpx_icache_inval_s3;
 reg [`L15_PADDR_MASK] cpx_inval_address_s3;
 reg [L1_MAX_DATA_PACKETS_BITS_WIDTH-1:0] buffer_noc2decoder_cpx_data;
-
+reg multicyc_inval_subline_val;
 always @ *
 begin
     cpx_req_val_s3 = 0;
@@ -4177,6 +4183,8 @@ begin
     cpx_atomic_bit_s3 = 0;
     cpx_icache_inval_s3 = 0;
     cpx_inval_address_s3[`L15_PADDR_MASK] = address_s3[`L15_PADDR_MASK];
+    multicyc_inval_subline_val = 0;
+
     case(cpx_operation_s3)
         `L15_CPX_GEN_ICACHE_INVALIDATION:
         begin
@@ -4193,7 +4201,14 @@ begin
         end
         `L15_CPX_GEN_INVALIDATION_IF_TAGCHECK_MES_AND_WAYMAP_VALID:
         begin
-            cpx_req_val_s3 = tagcheck_state_mes_s3 && wmt_compare_match_s3;
+            `ifdef PITON_ARIANE_HPDC 
+                multicyc_inval_subline_val = (L15_L1D_LINE_SIZE==64) ? address_s3[`L15_SUBLINE_MASK]==2'b11 : 
+                                            (L15_L1D_LINE_SIZE==32) ? address_s3[`L15_SUBLINE_MASK]==2'b01 || address_s3[`L15_SUBLINE_MASK]==2'b11 : 
+                                                                    1'b1; // 16 B 
+                cpx_req_val_s3 = tagcheck_state_mes_s3 && (!l1_inv_multicyc_s3 || multicyc_inval_subline_val) && wmt_compare_match_s3;
+            `else
+                cpx_req_val_s3 = tagcheck_state_mes_s3 && wmt_compare_match_s3;
+            `endif
             cpx_type_s3 = `CPX_RESTYPE_INVAL;
             cpx_invalidate_l1_s3 = 1;
             cpx_inval_way_s3 = wmt_compare_match_way_s3;
@@ -4320,8 +4335,13 @@ begin
     endcase
 
     l15_cpxencoder_returntype[`L15_UNPARAM_3_0] = cpx_type_s3; //default
+`ifdef PITON_ARIANE_HPDC
+    l15_cpxencoder_val = val_s3 && cpx_req_val_s3 && !cpxencoder_req_staled_s3 && 
+        (!(l1d_load_s3 || mshr_write_s3 || l1_inv_s3) || cache_subline_s3 == ((L15_L1D_LINE_SIZE/`L15_DATA_ARRAY_SIZE)-1));
+`else
     l15_cpxencoder_val = val_s3 && cpx_req_val_s3 && !cpxencoder_req_staled_s3 && 
         (!(l1d_load_s3 || mshr_write_s3) || cache_subline_s3 == ((L15_L1D_LINE_SIZE/`L15_DATA_ARRAY_SIZE)-1));
+`endif
     l15_cpxencoder_l2miss = 0;
     l15_cpxencoder_error[`L15_UNPARAM_1_0] = 0;
     l15_cpxencoder_noncacheable = 0;
