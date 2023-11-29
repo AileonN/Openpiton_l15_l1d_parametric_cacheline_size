@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   }
 
   // synchronize with other cores and wait until it is this core's turn
-  while(id != amo_cnt[0]);
+  barrier(core_num);
 
   // assemble number and print
   printf("Hello world, this is hart %d of %d harts!\n", id, core_num);
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
   ATOMIC_OP(amo_cnt[0], 1, add, w);
 
   int j = 0, k = 0, rand = 49;
-  while(core_num != amo_cnt[0]);
+  barrier(core_num);
 
 
   printf("Core %d entered cal section\n",id);
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     }
   
   ATOMIC_OP(amo_cnt[0], 1, add, w);
-  while(amo_cnt[0] != 2*core_num);
+  barrier(core_num);
 
   if (id == 0)
   {
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
   }
   
   ATOMIC_OP(amo_cnt[0], 1, add, w);
-  while(amo_cnt[0] != 3*core_num);
+  barrier(core_num);
 
   printf("Core %d entered cal section\n",id);
     for (i=0; i<100; i++)
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     }
 
   ATOMIC_OP(amo_cnt[0], 1, add, w);
-  while(amo_cnt[0] != 4*core_num);
+  barrier(core_num);
 
   if (id == 0)
   {
